@@ -483,6 +483,19 @@
 			};
 		};
 
+		ths: ths@1c25000 {
+			#thermal-sensor-cells = <0>;
+			compatible = "allwinner,sun8i-h3-ths";
+			reg = <0x01c25000 0x400>,
+			      <0x01c14234 0x4>;
+			reg-names = "ths", "calibration";
+			interrupts = <GIC_SPI 31 IRQ_TYPE_LEVEL_HIGH>;
+			resets = <&ccu RST_BUS_THS>;
+			reset-names = "ahb";
+			clocks = <&ccu CLK_BUS_THS>, <&ccu CLK_THS>;
+			clock-names = "ahb", "ths";
+		};
+
 		timer@1c20c00 {
 			compatible = "allwinner,sun4i-a10-timer";
 			reg = <0x01c20c00 0xa0>;
@@ -864,6 +877,14 @@
 				pins = "PL0", "PL1";
 				function = "s_i2c";
 			};
+		};
+	};
+
+	thermal-zones {
+		cpu_thermal: cpu-thermal {
+			polling-delay-passive = <330>;
+			polling-delay = <1000>;
+			thermal-sensors = <&ths 0>;
 		};
 	};
 };
