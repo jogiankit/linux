@@ -140,8 +140,10 @@
 		regulator-name = "vmain";
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
-		gpio = <&r_pio 0 9 GPIO_ACTIVE_HIGH>;
+		gpio = <&r_pio 0 9 GPIO_ACTIVE_HIGH>; /* PL9 */
 		enable-active-high;
+		//megi: See modem for comments
+		regulator-always-on;
 		vin-supply = <&reg_vbat>;
 	};
 
@@ -155,6 +157,19 @@
 		 */
 		clocks = <&ac100_rtc 1>;
 		clock-names = "ext_clock";
+	};
+
+	modem {
+		compatible = "custom,power-manager";
+		//megi: switching Q5 MOSFET probably leads to brownouts on
+		//VBAT due to larger capacities on VMAIN. Only use PL8 to
+		//enable/disable the modem
+		//power-supply = <&reg_vmain>;
+		enable-gpios = <&r_pio 0 8 GPIO_ACTIVE_HIGH>; /* PL8 */
+		reset-gpios = <&r_pio 0 10 GPIO_ACTIVE_HIGH>; /* PL10 */
+		wakeup-gpios = <&r_pio 0 11 GPIO_ACTIVE_HIGH>; /* PL11 */
+		reset-duration-ms = <5>;
+		char-device-name = "pwr-modem";
 	};
 };
 
