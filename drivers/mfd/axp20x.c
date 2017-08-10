@@ -29,6 +29,7 @@
 #include <linux/pm_runtime.h>
 #include <linux/regmap.h>
 #include <linux/regulator/consumer.h>
+#include <linux/regulator/userspace-consumer.h>
 
 #define AXP20X_OFF	BIT(7)
 
@@ -772,6 +773,16 @@ static const struct mfd_cell axp809_cells[] = {
 	},
 };
 
+static struct regulator_bulk_data vcc_vb = {
+	.supply = "vcc-vb",
+};
+
+static struct regulator_userspace_consumer_data vcc_vb_data = {
+	.name = "vcc-vb",
+	.num_supplies = 1,
+	.supplies = &vcc_vb,
+};
+
 static const struct mfd_cell axp813_cells[] = {
 	{
 		.name		= "axp221-pek",
@@ -796,6 +807,10 @@ static const struct mfd_cell axp813_cells[] = {
 	}, {
 		.name		= "axp20x-usb-power-supply",
 		.of_compatible	= "x-powers,axp813-usb-power-supply",
+	}, {
+		.name		= "reg-userspace-consumer",
+		.platform_data	= &vcc_vb_data,
+		.pdata_size	= sizeof(vcc_vb_data),
 	},
 };
 
