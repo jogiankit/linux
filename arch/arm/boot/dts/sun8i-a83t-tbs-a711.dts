@@ -396,7 +396,7 @@
 };
 
 &reg_eldo1 {
-	regulator-min-microvolt = <1200000>;
+	regulator-min-microvolt = <1800000>;
 	regulator-max-microvolt = <1800000>;
 	regulator-name = "dvdd-csi-r";
 };
@@ -408,7 +408,7 @@
 };
 
 &reg_eldo3 {
-	regulator-min-microvolt = <1200000>;
+	regulator-min-microvolt = <1800000>;
 	regulator-max-microvolt = <1800000>;
 	regulator-name = "dvdd-csi-f";
 };
