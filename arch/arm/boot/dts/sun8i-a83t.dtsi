@@ -768,6 +768,11 @@
 				pins = "PG8", "PG9";
 				function = "uart1";
 			};
+
+			uart2_pb_pins: uart2-pb-pins {
+				pins = "PB0", "PB1";
+				function = "uart2";
+			};
 		};
 
 		timer@1c20c00 {
