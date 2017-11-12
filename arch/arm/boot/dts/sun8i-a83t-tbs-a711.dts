@@ -46,6 +46,7 @@
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/pwm/pwm.h>
+#include <dt-bindings/input/input.h>
 
 / {
 	model = "TBS A711 Tablet";
@@ -154,6 +155,25 @@
  */
 &ehci1 {
 	status = "okay";
+};
+
+&r_lradc {
+	vref-supply = <&reg_aldo2>;
+	status = "okay";
+
+	button@210 {
+		label = "Volume Up";
+		linux,code = <KEY_VOLUMEUP>;
+		channel = <0>;
+		voltage = <210000>;
+	};
+
+	button@410 {
+		label = "Volume Down";
+		linux,code = <KEY_VOLUMEDOWN>;
+		channel = <0>;
+		voltage = <410000>;
+	};
 };
 
 &mmc0 {
