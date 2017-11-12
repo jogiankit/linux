@@ -299,6 +299,19 @@
 		#size-cells = <1>;
 		ranges;
 
+		dai: dai@01c23000 {
+			#sound-dai-cells = <0>;
+			compatible = "allwinner,sun8i-a83t-i2s";
+			reg = <0x01c23000 0x200>;
+			interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>;
+			clocks = <&ccu CLK_BUS_TDM>, <&ccu CLK_TDM>;
+			clock-names = "apb", "mod";
+			resets = <&ccu RST_BUS_TDM>;
+			dmas = <&dma 28>, <&dma 28>;
+			dma-names = "rx", "tx";
+			status = "disabled";
+		};
+
 		display_clocks: clock@1000000 {
 			compatible = "allwinner,sun8i-a83t-de2-clk";
 			reg = <0x01000000 0x100000>;
