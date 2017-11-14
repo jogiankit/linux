@@ -766,6 +766,14 @@ config LEDS_NIC78BX
 	  To compile this driver as a module, choose M here: the module
 	  will be called leds-nic78bx.
 
+config LEDS_AXP20X
+	tristate "LED support for AXP20X-like PMICs (AXP813, ...)"
+	depends on LEDS_CLASS && MFD_AXP20X
+	help
+	  This option enables support for on-chip LED drivers on
+	  AXP20X-like PMICs.
+
+
 comment "LED Triggers"
 source "drivers/leds/trigger/Kconfig"
 

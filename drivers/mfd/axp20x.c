@@ -812,6 +812,9 @@ static const struct mfd_cell axp813_cells[] = {
 		.name		= "reg-userspace-consumer",
 		.platform_data	= &vcc_vb_data,
 		.pdata_size	= sizeof(vcc_vb_data),
+	}, {
+		.name		= "axp20x-leds",
+		.of_compatible	= "x-powers,axp813-leds",
 	},
 };
 
