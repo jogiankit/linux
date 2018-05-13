@@ -53,6 +53,9 @@
 			reg = <0>;
 			enable-method = "psci";
 			clock-frequency = <1200000000>;
+			#cooling-cells = <2>;
+			cooling-min-level = <0>;
+			cooling-max-level = <15>;
 		};
 
 		cpu@1 {
