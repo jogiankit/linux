@@ -77,6 +77,8 @@
 		};
 
 		cpu@1 {
+			clocks = <&ccu CLK_C0CPUX>;
+			clock-names = "cpu";
 			compatible = "arm,cortex-a7";
 			clock-frequency = <1200000000>;
 			device_type = "cpu";
@@ -87,6 +89,8 @@
 		};
 
 		cpu@2 {
+			clocks = <&ccu CLK_C0CPUX>;
+			clock-names = "cpu";
 			compatible = "arm,cortex-a7";
 			clock-frequency = <1200000000>;
 			device_type = "cpu";
@@ -97,6 +101,8 @@
 		};
 
 		cpu@3 {
+			clocks = <&ccu CLK_C0CPUX>;
+			clock-names = "cpu";
 			compatible = "arm,cortex-a7";
 			clock-frequency = <1200000000>;
 			device_type = "cpu";
@@ -122,6 +128,8 @@
 		};
 
 		cpu@101 {
+			clocks = <&ccu CLK_C1CPUX>;
+			clock-names = "cpu";
 			compatible = "arm,cortex-a7";
 			clock-frequency = <1200000000>;
 			device_type = "cpu";
@@ -132,6 +140,8 @@
 		};
 
 		cpu@102 {
+			clocks = <&ccu CLK_C1CPUX>;
+			clock-names = "cpu";
 			compatible = "arm,cortex-a7";
 			clock-frequency = <1200000000>;
 			device_type = "cpu";
@@ -142,6 +152,8 @@
 		};
 
 		cpu@103 {
+			clocks = <&ccu CLK_C1CPUX>;
+			clock-names = "cpu";
 			compatible = "arm,cortex-a7";
 			clock-frequency = <1200000000>;
 			device_type = "cpu";
