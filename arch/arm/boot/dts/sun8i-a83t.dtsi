@@ -72,8 +72,6 @@
 			enable-method = "allwinner,sun8i-a83t-smp";
 			reg = <0>;
 			#cooling-cells = <2>;
-			cooling-min-level = <0>;
-			cooling-max-level = <7>;
 		};
 
 		cpu@1 {
@@ -86,6 +84,7 @@
 			cci-control-port = <&cci_control0>;
 			enable-method = "allwinner,sun8i-a83t-smp";
 			reg = <1>;
+			#cooling-cells = <2>;
 		};
 
 		cpu@2 {
@@ -98,6 +97,7 @@
 			cci-control-port = <&cci_control0>;
 			enable-method = "allwinner,sun8i-a83t-smp";
 			reg = <2>;
+			#cooling-cells = <2>;
 		};
 
 		cpu@3 {
@@ -110,6 +110,7 @@
 			cci-control-port = <&cci_control0>;
 			enable-method = "allwinner,sun8i-a83t-smp";
 			reg = <3>;
+			#cooling-cells = <2>;
 		};
 
 		cpu100: cpu@100 {
@@ -123,8 +124,6 @@
 			enable-method = "allwinner,sun8i-a83t-smp";
 			reg = <0x100>;
 			#cooling-cells = <2>;
-			cooling-min-level = <0>;
-			cooling-max-level = <7>;
 		};
 
 		cpu@101 {
@@ -137,6 +136,7 @@
 			cci-control-port = <&cci_control1>;
 			enable-method = "allwinner,sun8i-a83t-smp";
 			reg = <0x101>;
+			#cooling-cells = <2>;
 		};
 
 		cpu@102 {
@@ -149,6 +149,7 @@
 			cci-control-port = <&cci_control1>;
 			enable-method = "allwinner,sun8i-a83t-smp";
 			reg = <0x102>;
+			#cooling-cells = <2>;
 		};
 
 		cpu@103 {
@@ -161,6 +162,7 @@
 			cci-control-port = <&cci_control1>;
 			enable-method = "allwinner,sun8i-a83t-smp";
 			reg = <0x103>;
+			#cooling-cells = <2>;
 		};
 	};
 
