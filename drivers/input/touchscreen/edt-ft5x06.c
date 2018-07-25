@@ -40,6 +40,7 @@
 #include <linux/input/mt.h>
 #include <linux/input/touchscreen.h>
 #include <linux/of_device.h>
+#include <linux/regulator/consumer.h>
 
 #define WORK_REGISTER_THRESHOLD		0x00
 #define WORK_REGISTER_REPORT_RATE	0x08
@@ -100,6 +101,7 @@ struct edt_ft5x06_ts_data {
 	struct touchscreen_properties prop;
 	u16 num_x;
 	u16 num_y;
+	struct regulator *vcc;
 
 	struct gpio_desc *reset_gpio;
 	struct gpio_desc *wake_gpio;
@@ -1055,6 +1057,13 @@ edt_ft5x06_ts_set_regs(struct edt_ft5x06_ts_data *tsdata)
 	}
 }
 
+static void edt_ft5x06_disable_regulator(void *arg)
+{
+	struct edt_ft5x06_ts_data *data = arg;
+
+	regulator_disable(data->vcc);
+}
+
 static int edt_ft5x06_ts_probe(struct i2c_client *client,
 					 const struct i2c_device_id *id)
 {
@@ -1082,6 +1091,28 @@ static int edt_ft5x06_ts_probe(struct i2c_client *client,
 	}
 
 	tsdata->max_support_points = chip_data->max_support_points;
+
+	tsdata->vcc = devm_regulator_get(&client->dev, "vcc");
+	if (IS_ERR(tsdata->vcc)) {
+		error = PTR_ERR(tsdata->vcc);
+		if (error != -EPROBE_DEFER)
+			dev_err(&client->dev, "failed to request regulator: %d\n",
+				error);
+		return error;
+	}
+
+	error = regulator_enable(tsdata->vcc);
+	if (error < 0) {
+		dev_err(&client->dev, "failed to enable vcc: %d\n",
+			error);
+		return error;
+	}
+
+	error = devm_add_action_or_reset(&client->dev,
+					 edt_ft5x06_disable_regulator,
+					 tsdata);
+	if (error)
+		return error;
 
 	tsdata->reset_gpio = devm_gpiod_get_optional(&client->dev,
 						     "reset", GPIOD_OUT_HIGH);
@@ -1212,9 +1243,12 @@ static int edt_ft5x06_ts_remove(struct i2c_client *client)
 static int __maybe_unused edt_ft5x06_ts_suspend(struct device *dev)
 {
 	struct i2c_client *client = to_i2c_client(dev);
+	struct edt_ft5x06_ts_data *tsdata = i2c_get_clientdata(client);
 
 	if (device_may_wakeup(dev))
 		enable_irq_wake(client->irq);
+	else
+		regulator_disable(tsdata->vcc);
 
 	return 0;
 }
@@ -1222,9 +1256,18 @@ static int __maybe_unused edt_ft5x06_ts_suspend(struct device *dev)
 static int __maybe_unused edt_ft5x06_ts_resume(struct device *dev)
 {
 	struct i2c_client *client = to_i2c_client(dev);
+	struct edt_ft5x06_ts_data *tsdata = i2c_get_clientdata(client);
+	int ret;
 
 	if (device_may_wakeup(dev))
 		disable_irq_wake(client->irq);
+	else {
+		ret = regulator_enable(tsdata->vcc);
+		if (ret < 0) {
+			dev_err(dev, "failed to enable vcc: %d\n", ret);
+			return ret;
+		}
+	}
 
 	return 0;
 }
