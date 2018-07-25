@@ -1250,6 +1250,12 @@ static int __maybe_unused edt_ft5x06_ts_suspend(struct device *dev)
 	else
 		regulator_disable(tsdata->vcc);
 
+	if (tsdata->wake_gpio)
+		gpiod_set_value(tsdata->wake_gpio, 0);
+
+	if (tsdata->reset_gpio)
+		gpiod_set_value(tsdata->reset_gpio, 1);
+
 	return 0;
 }
 
@@ -1268,6 +1274,12 @@ static int __maybe_unused edt_ft5x06_ts_resume(struct device *dev)
 			return ret;
 		}
 	}
+
+	if (tsdata->wake_gpio)
+		gpiod_set_value(tsdata->wake_gpio, 1);
+
+	if (tsdata->reset_gpio)
+		gpiod_set_value(tsdata->reset_gpio, 0);
 
 	return 0;
 }
