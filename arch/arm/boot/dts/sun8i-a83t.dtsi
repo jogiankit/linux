@@ -113,6 +113,7 @@
 			#cooling-cells = <2>;
 		};
 
+#ifndef A83T_C1_DISABLE
 		cpu100: cpu@100 {
 			clocks = <&ccu CLK_C1CPUX>;
 			clock-names = "cpu";
@@ -164,6 +165,7 @@
 			reg = <0x103>;
 			#cooling-cells = <2>;
 		};
+#endif
 	};
 
 	timer {
@@ -269,6 +271,7 @@
 		};
 	};
 
+#ifndef A83T_C1_DISABLE
 	cpu1_opp_table: opp_table1 {
 		compatible = "operating-points-v2";
 		opp-shared;
@@ -321,6 +324,7 @@
 			clock-latency-ns = <244144>; /* 8 32k periods */
 		};
 	};
+#endif
 
 	soc {
 		compatible = "simple-bus";
