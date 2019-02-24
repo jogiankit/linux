@@ -95,6 +95,8 @@
 #define PINCTRL_SUN7I_A20	BIT(7)
 #define PINCTRL_SUN8I_R40	BIT(8)
 
+#define PIO_POW_MOD_SEL_REG	0x340
+
 struct sunxi_desc_function {
 	unsigned long	variant;
 	const char	*name;
@@ -118,6 +120,7 @@ struct sunxi_pinctrl_desc {
 	bool				irq_read_needs_mux;
 	bool				disable_strict_mode;
 	bool				has_io_bias_cfg;
+	bool				needs_voltage_bias_setup;
 };
 
 struct sunxi_pinctrl_function {

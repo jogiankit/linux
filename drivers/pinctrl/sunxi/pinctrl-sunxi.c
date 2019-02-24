@@ -757,6 +757,27 @@ static int sunxi_pmx_request(struct pinctrl_dev *pctldev, unsigned offset)
 		return PTR_ERR(reg);
 	}
 
+	if (pctl->desc->needs_voltage_bias_setup) {
+		ret = regulator_get_voltage(reg);
+		if (ret > 0) {
+			unsigned long flags;
+			u32 val, reg;
+
+			val = ret <= 1800000 ? 1 : 0;
+
+			dev_info(pctl->dev,
+				 "Setting voltage bias to %sV on bank P%c\n",
+				 val ? "1.8" : "3.3", 'A' + bank);
+
+			raw_spin_lock_irqsave(&pctl->lock, flags);
+			reg = readl(pctl->membase + PIO_POW_MOD_SEL_REG);
+			reg &= ~(1 << bank);
+			writel(reg | val << bank,
+			       pctl->membase + PIO_POW_MOD_SEL_REG);
+			raw_spin_unlock_irqrestore(&pctl->lock, flags);
+		}
+	}
+
 	ret = regulator_enable(reg);
 	if (ret) {
 		dev_err(pctl->dev,
