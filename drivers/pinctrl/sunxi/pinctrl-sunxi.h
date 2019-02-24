@@ -95,6 +95,9 @@
 #define PINCTRL_SUN7I_A20	BIT(7)
 #define PINCTRL_SUN8I_R40	BIT(8)
 
+/* Bias voltage configuration done via Pn_GRP_CONFIG registers. */
+#define IO_BIAS_CFG_V1		1
+
 struct sunxi_desc_function {
 	unsigned long	variant;
 	const char	*name;
@@ -117,7 +120,7 @@ struct sunxi_pinctrl_desc {
 	const unsigned int		*irq_bank_map;
 	bool				irq_read_needs_mux;
 	bool				disable_strict_mode;
-	bool				has_io_bias_cfg;
+	int				io_bias_cfg_variant;
 };
 
 struct sunxi_pinctrl_function {
