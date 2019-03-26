@@ -146,16 +146,28 @@ static int sun8i_dw_hdmi_bind(struct device *dev, struct device *master,
 		return PTR_ERR(hdmi->regulator);
 	}
 
+	hdmi->ddc_regulator = devm_regulator_get(dev, "ddc");
+	if (IS_ERR(hdmi->ddc_regulator)) {
+		dev_err(dev, "Couldn't get ddc regulator\n");
+		return PTR_ERR(hdmi->ddc_regulator);
+	}
+
 	ret = regulator_enable(hdmi->regulator);
 	if (ret) {
 		dev_err(dev, "Failed to enable regulator\n");
 		return ret;
 	}
 
+	ret = regulator_enable(hdmi->ddc_regulator);
+	if (ret) {
+		dev_err(dev, "Failed to enable ddc regulator\n");
+		goto err_disable_regulator;
+	}
+
 	ret = reset_control_deassert(hdmi->rst_ctrl);
 	if (ret) {
 		dev_err(dev, "Could not deassert ctrl reset control\n");
-		goto err_disable_regulator;
+		goto err_disable_ddc_regulator;
 	}
 
 	ret = clk_prepare_enable(hdmi->clk_tmds);
@@ -208,6 +220,8 @@ err_disable_clk_tmds:
 	clk_disable_unprepare(hdmi->clk_tmds);
 err_assert_ctrl_reset:
 	reset_control_assert(hdmi->rst_ctrl);
+err_disable_ddc_regulator:
+	regulator_disable(hdmi->ddc_regulator);
 err_disable_regulator:
 	regulator_disable(hdmi->regulator);
 
@@ -223,6 +237,7 @@ static void sun8i_dw_hdmi_unbind(struct device *dev, struct device *master,
 	sun8i_hdmi_phy_remove(hdmi);
 	clk_disable_unprepare(hdmi->clk_tmds);
 	reset_control_assert(hdmi->rst_ctrl);
+	regulator_disable(hdmi->ddc_regulator);
 	regulator_disable(hdmi->regulator);
 }
 
