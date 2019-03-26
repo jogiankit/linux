@@ -339,6 +339,7 @@ static const struct bcm_subver_table bcm_uart_subver_table[] = {
 	{ 0x2122, "BCM4343A0"	},	/* 001.001.034 */
 	{ 0x2209, "BCM43430A1"  },	/* 001.002.009 */
 	{ 0x6119, "BCM4345C0"	},	/* 003.001.025 */
+//	{ 0x6119, "BCM4345C5"	},	/* 003.001.025 */
 	{ 0x230f, "BCM4356A2"	},	/* 001.003.015 */
 	{ 0x220e, "BCM20702A1"  },	/* 001.002.014 */
 	{ 0x4217, "BCM4329B1"   },	/* 002.002.023 */
@@ -383,6 +384,8 @@ int btbcm_initialize(struct hci_dev *hdev, char *fw_name, size_t len,
 	rev = le16_to_cpu(ver->hci_rev);
 	subver = le16_to_cpu(ver->lmp_subver);
 	kfree_skb(skb);
+
+	bt_dev_info(hdev, "BCM: found subver %hx!!!", subver);
 
 	/* Read controller information */
 	if (!reinit) {
