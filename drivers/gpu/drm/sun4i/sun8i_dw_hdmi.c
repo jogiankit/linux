@@ -6,6 +6,7 @@
 #include <linux/component.h>
 #include <linux/module.h>
 #include <linux/of_device.h>
+#include <linux/of_gpio.h>
 #include <linux/platform_device.h>
 
 #include <drm/drm_of.h>
@@ -177,6 +178,15 @@ static int sun8i_dw_hdmi_bind(struct device *dev, struct device *master,
 		goto err_disable_clk_tmds;
 	}
 
+	hdmi->ddc_en_gpio = devm_gpiod_get_optional(dev, "ddc-enable",
+						    GPIOD_IN);
+	if (IS_ERR(hdmi->ddc_en_gpio)) {
+		dev_err(dev, "Couldn't request DDC enable GPIO\n");
+		return PTR_ERR(hdmi->ddc_en_gpio);
+	}
+
+	gpiod_set_value(hdmi->ddc_en_gpio, 1);
+
 	drm_encoder_helper_add(encoder, &sun8i_dw_hdmi_encoder_helper_funcs);
 	drm_encoder_init(drm, encoder, &sun8i_dw_hdmi_encoder_funcs,
 			 DRM_MODE_ENCODER_TMDS, NULL);
@@ -219,6 +229,7 @@ static void sun8i_dw_hdmi_unbind(struct device *dev, struct device *master,
 {
 	struct sun8i_dw_hdmi *hdmi = dev_get_drvdata(dev);
 
+	gpiod_set_value(hdmi->ddc_en_gpio, 0);
 	dw_hdmi_unbind(hdmi->hdmi);
 	sun8i_hdmi_phy_remove(hdmi);
 	clk_disable_unprepare(hdmi->clk_tmds);
