@@ -132,6 +132,7 @@ static void ubx_remove(struct serdev_device *serdev)
 static const struct of_device_id ubx_of_match[] = {
 	{ .compatible = "u-blox,neo-8" },
 	{ .compatible = "u-blox,neo-m8" },
+	{ .compatible = "u-blox,neo-6m" },
 	{},
 };
 MODULE_DEVICE_TABLE(of, ubx_of_match);
