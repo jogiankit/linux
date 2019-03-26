@@ -157,22 +157,18 @@
 	status = "okay";
 };
 
-&r_lradc {
-	vref-supply = <&reg_aldo2>;
+&i2c1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c1_pins>;
+	clock-frequency = <400000>;
 	status = "okay";
 
-	button@210 {
-		label = "Volume Up";
-		linux,code = <KEY_VOLUMEUP>;
-		channel = <0>;
-		voltage = <210000>;
-	};
-
-	button@410 {
-		label = "Volume Down";
-		linux,code = <KEY_VOLUMEDOWN>;
-		channel = <0>;
-		voltage = <410000>;
+	/* Accelerometer */
+	bma250@18 {
+		compatible = "bosch,bma250";
+		reg = <0x18>;
+		interrupt-parent = <&pio>;
+		interrupts = <7 10 IRQ_TYPE_EDGE_RISING>; /* PH10 / EINT10 */
 	};
 };
 
@@ -218,6 +214,25 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pwm_pin>;
 	status = "okay";
+};
+
+&r_lradc {
+	vref-supply = <&reg_aldo2>;
+	status = "okay";
+
+	button@210 {
+		label = "Volume Up";
+		linux,code = <KEY_VOLUMEUP>;
+		channel = <0>;
+		voltage = <210000>;
+	};
+
+	button@410 {
+		label = "Volume Down";
+		linux,code = <KEY_VOLUMEDOWN>;
+		channel = <0>;
+		voltage = <410000>;
+	};
 };
 
 &r_rsb {
