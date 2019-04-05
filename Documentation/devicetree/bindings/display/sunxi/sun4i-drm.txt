@@ -104,6 +104,7 @@ Required properties:
     output, usually to an HDMI connector.
 
 Optional properties:
+  - ddc-supply: the VCC power supply for the DDC bus
   - hvcc-supply: the VCC power supply of the controller
 
 DWC HDMI PHY
