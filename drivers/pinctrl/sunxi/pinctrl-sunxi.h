@@ -95,8 +95,12 @@
 #define PINCTRL_SUN7I_A20	BIT(7)
 #define PINCTRL_SUN8I_R40	BIT(8)
 
+#define PIO_POW_MOD_SEL_REG	0x340
+
 /* Bias voltage configuration done via Pn_GRP_CONFIG registers. */
 #define IO_BIAS_CFG_V1		1
+/* Bias voltage set in the PIO_POW_MOD_SEL_REG register. */
+#define IO_BIAS_CFG_V2		2
 
 struct sunxi_desc_function {
 	unsigned long	variant;
