@@ -11,6 +11,7 @@ Required properties:
 		    - "allwinner,sun8i-v3-rtc"
 		    - "allwinner,sun50i-a64-rtc", "allwinner,sun8i-h3-rtc"
 		    - "allwinner,sun50i-h5-rtc"
+		    - "allwinner,sun50i-h6-rtc"
 
 		  Where there are two or more compatible strings, this
 		  denotes the hardware covered by the most specific one
