@@ -607,10 +607,12 @@ static int sunxi_pinctrl_set_io_bias_cfg(struct sunxi_pinctrl *pctl,
 					 unsigned pin,
 					 struct regulator *supply)
 {
+	unsigned short bank = pin / PINS_PER_BANK;
+	unsigned long flags;
 	u32 val, reg;
 	int uV;
 
-	if (!pctl->desc->has_io_bias_cfg)
+	if (!pctl->desc->io_bias_cfg_variant)
 		return 0;
 
 	uV = regulator_get_voltage(supply);
@@ -621,25 +623,41 @@ static int sunxi_pinctrl_set_io_bias_cfg(struct sunxi_pinctrl *pctl,
 	if (uV == 0)
 		return 0;
 
-	/* Configured value must be equal or greater to actual voltage */
-	if (uV <= 1800000)
-		val = 0x0; /* 1.8V */
-	else if (uV <= 2500000)
-		val = 0x6; /* 2.5V */
-	else if (uV <= 2800000)
-		val = 0x9; /* 2.8V */
-	else if (uV <= 3000000)
-		val = 0xA; /* 3.0V */
-	else
-		val = 0xD; /* 3.3V */
+	switch (pctl->desc->io_bias_cfg_variant) {
+	case BIAS_VOLTAGE_GRP_CONFIG:
+		/*
+		 * Configured value must be equal or greater to actual
+		 * voltage.
+		 */
+		if (uV <= 1800000)
+			val = 0x0; /* 1.8V */
+		else if (uV <= 2500000)
+			val = 0x6; /* 2.5V */
+		else if (uV <= 2800000)
+			val = 0x9; /* 2.8V */
+		else if (uV <= 3000000)
+			val = 0xA; /* 3.0V */
+		else
+			val = 0xD; /* 3.3V */
 
-	pin -= pctl->desc->pin_base;
+		pin -= pctl->desc->pin_base;
 
-	reg = readl(pctl->membase + sunxi_grp_config_reg(pin));
-	reg &= ~IO_BIAS_MASK;
-	writel(reg | val, pctl->membase + sunxi_grp_config_reg(pin));
+		reg = readl(pctl->membase + sunxi_grp_config_reg(pin));
+		reg &= ~IO_BIAS_MASK;
+		writel(reg | val, pctl->membase + sunxi_grp_config_reg(pin));
+		return 0;
+	case BIAS_VOLTAGE_PIO_POW_MODE_SEL:
+		val = uV <= 1800000 ? 1 : 0;
 
-	return 0;
+		raw_spin_lock_irqsave(&pctl->lock, flags);
+		reg = readl(pctl->membase + PIO_POW_MOD_SEL_REG);
+		reg &= ~(1 << bank);
+		writel(reg | val << bank, pctl->membase + PIO_POW_MOD_SEL_REG);
+		raw_spin_unlock_irqrestore(&pctl->lock, flags);
+		return 0;
+	default:
+		return -EINVAL;
+	}
 }
 
 static int sunxi_pmx_get_funcs_cnt(struct pinctrl_dev *pctldev)
