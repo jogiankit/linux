@@ -1736,6 +1736,9 @@ static const struct usb_device_id acm_ids[] = {
 	{ USB_DEVICE(0x22b8, 0x2d9a),   /* modem + AT port + diagnostics + NMEA */
 	.driver_info = NO_UNION_NORMAL, /* handle only modem interface          */
 	},
+	{ USB_DEVICE(0x0ca6, 0xa050), /* Castles Technology VEGA 5000 */
+	.driver_info = NO_UNION_NORMAL, /* reports zero length descriptor */
+	},
 
 	{ USB_DEVICE(0x0572, 0x1329), /* Hummingbird huc56s (Conexant) */
 	.driver_info = NO_UNION_NORMAL, /* union descriptor misplaced on
