@@ -48,6 +48,8 @@ static const u32 supported_pixformats[] = {
 	V4L2_PIX_FMT_YVYU,
 	V4L2_PIX_FMT_UYVY,
 	V4L2_PIX_FMT_VYUY,
+	V4L2_PIX_FMT_RGB565,
+	V4L2_PIX_FMT_RGB555,
 	V4L2_PIX_FMT_HM12,
 	V4L2_PIX_FMT_NV12,
 	V4L2_PIX_FMT_NV21,
@@ -433,6 +435,28 @@ static int vidioc_s_input(struct file *file, void *fh, unsigned int i)
 	return 0;
 }
 
+static int vidioc_g_parm(struct file *file, void *priv,
+			 struct v4l2_streamparm *p)
+{
+	struct sun6i_video *video = video_drvdata(file);
+	struct v4l2_subdev *subdev;
+
+	subdev = sun6i_video_remote_subdev(video, NULL);
+
+	return v4l2_g_parm_cap(video_devdata(file), subdev, p);
+}
+
+static int vidioc_s_parm(struct file *file, void *priv,
+			 struct v4l2_streamparm *p)
+{
+	struct sun6i_video *video = video_drvdata(file);
+	struct v4l2_subdev *subdev;
+
+	subdev = sun6i_video_remote_subdev(video, NULL);
+
+	return v4l2_s_parm_cap(video_devdata(file), subdev, p);
+}
+
 static const struct v4l2_ioctl_ops sun6i_video_ioctl_ops = {
 	.vidioc_querycap		= vidioc_querycap,
 	.vidioc_enum_fmt_vid_cap	= vidioc_enum_fmt_vid_cap,
@@ -443,6 +467,9 @@ static const struct v4l2_ioctl_ops sun6i_video_ioctl_ops = {
 	.vidioc_enum_input		= vidioc_enum_input,
 	.vidioc_s_input			= vidioc_s_input,
 	.vidioc_g_input			= vidioc_g_input,
+
+	.vidioc_g_parm			= vidioc_g_parm,
+	.vidioc_s_parm			= vidioc_s_parm,
 
 	.vidioc_reqbufs			= vb2_ioctl_reqbufs,
 	.vidioc_querybuf		= vb2_ioctl_querybuf,

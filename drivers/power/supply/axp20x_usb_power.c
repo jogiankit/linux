@@ -41,10 +41,17 @@
 #define AXP20X_VBUC_CLIMIT_100mA	2
 #define AXP20X_VBUC_CLIMIT_NONE		3
 
+#define AXP813_VBUC_CLIMIT_900mA	0
+#define AXP813_VBUC_CLIMIT_1500mA	1
+#define AXP813_VBUC_CLIMIT_2000mA	2
+#define AXP813_VBUC_CLIMIT_2500mA	3
+
 #define AXP20X_ADC_EN1_VBUS_CURR	BIT(2)
 #define AXP20X_ADC_EN1_VBUS_VOLT	BIT(3)
 
 #define AXP20X_VBUS_MON_VBUS_VALID	BIT(3)
+#define AXP813_CHRG_CTRL3_VBUS_CUR_LIMIT_MASK GENMASK(7, 4)
+#define AXP813_CHRG_CTRL3_VBUS_CUR_LIMIT_OFFSET 4
 
 struct axp20x_usb_power {
 	struct device_node *np;
@@ -62,6 +69,103 @@ static irqreturn_t axp20x_usb_power_irq(int irq, void *devid)
 	power_supply_changed(power->supply);
 
 	return IRQ_HANDLED;
+}
+
+static int axp813_get_current_max(struct axp20x_usb_power *power, int *val)
+{
+	unsigned int v;
+	int ret = regmap_read(power->regmap, AXP20X_VBUS_IPSOUT_MGMT, &v);
+
+	if (ret)
+		return ret;
+
+	switch (v & AXP20X_VBUS_CLIMIT_MASK) {
+	case AXP813_VBUC_CLIMIT_900mA:
+		*val = 900000;
+		break;
+	case AXP813_VBUC_CLIMIT_1500mA:
+		*val = 1500000;
+		break;
+	case AXP813_VBUC_CLIMIT_2000mA:
+		*val = 2000000;
+		break;
+	case AXP813_VBUC_CLIMIT_2500mA:
+		*val = 2500000;
+		break;
+	}
+	return 0;
+}
+
+static int
+axp813_usb_power_get_input_current_limit(struct axp20x_usb_power *power,
+					 int *intval)
+{
+	unsigned int v;
+	int ret = regmap_read(power->regmap, AXP813_CHRG_CTRL3, &v);
+
+	if (ret)
+		return ret;
+
+	v &= AXP813_CHRG_CTRL3_VBUS_CUR_LIMIT_MASK;
+	v >>= AXP813_CHRG_CTRL3_VBUS_CUR_LIMIT_OFFSET;
+
+	switch (v) {
+	case 0:
+		*intval = 100000;
+		return 0;
+	case 1:
+		*intval = 500000;
+		return 0;
+	case 2:
+		*intval = 900000;
+		return 0;
+	case 3:
+		*intval = 1500000;
+		return 0;
+	case 4:
+		*intval = 2000000;
+		return 0;
+	case 5:
+		*intval = 2500000;
+		return 0;
+	case 6:
+		*intval = 3000000;
+		return 0;
+	case 7:
+		*intval = 3500000;
+		return 0;
+	default:
+		*intval = 4000000;
+		return 0;
+	}
+}
+
+static int axp20x_get_current_max(struct axp20x_usb_power *power, int *val)
+{
+	unsigned int v;
+	int ret = regmap_read(power->regmap, AXP20X_VBUS_IPSOUT_MGMT, &v);
+
+	if (ret)
+		return ret;
+
+	switch (v & AXP20X_VBUS_CLIMIT_MASK) {
+	case AXP20X_VBUC_CLIMIT_100mA:
+		if (power->axp20x_id == AXP221_ID)
+			*val = -1; /* No 100mA limit */
+		else
+			*val = 100000;
+		break;
+	case AXP20X_VBUC_CLIMIT_500mA:
+		*val = 500000;
+		break;
+	case AXP20X_VBUC_CLIMIT_900mA:
+		*val = 900000;
+		break;
+	case AXP20X_VBUC_CLIMIT_NONE:
+		*val = -1;
+		break;
+	}
+	return 0;
 }
 
 static int axp20x_usb_power_get_property(struct power_supply *psy,
@@ -102,28 +206,9 @@ static int axp20x_usb_power_get_property(struct power_supply *psy,
 		val->intval = ret * 1700; /* 1 step = 1.7 mV */
 		return 0;
 	case POWER_SUPPLY_PROP_CURRENT_MAX:
-		ret = regmap_read(power->regmap, AXP20X_VBUS_IPSOUT_MGMT, &v);
-		if (ret)
-			return ret;
-
-		switch (v & AXP20X_VBUS_CLIMIT_MASK) {
-		case AXP20X_VBUC_CLIMIT_100mA:
-			if (power->axp20x_id == AXP221_ID)
-				val->intval = -1; /* No 100mA limit */
-			else
-				val->intval = 100000;
-			break;
-		case AXP20X_VBUC_CLIMIT_500mA:
-			val->intval = 500000;
-			break;
-		case AXP20X_VBUC_CLIMIT_900mA:
-			val->intval = 900000;
-			break;
-		case AXP20X_VBUC_CLIMIT_NONE:
-			val->intval = -1;
-			break;
-		}
-		return 0;
+		if (power->axp20x_id == AXP813_ID)
+			return axp813_get_current_max(power, &val->intval);
+		return axp20x_get_current_max(power, &val->intval);
 	case POWER_SUPPLY_PROP_CURRENT_NOW:
 		if (IS_ENABLED(CONFIG_AXP20X_ADC)) {
 			ret = iio_read_channel_processed(power->vbus_i,
@@ -181,6 +266,11 @@ static int axp20x_usb_power_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_ONLINE:
 		val->intval = !!(input & AXP20X_PWR_STATUS_VBUS_USED);
 		break;
+	case POWER_SUPPLY_PROP_INPUT_CURRENT_LIMIT:
+		if (power->axp20x_id == AXP813_ID)
+			return axp813_usb_power_get_input_current_limit(power,
+								&val->intval);
+		/* fallthrough */
 	default:
 		return -EINVAL;
 	}
@@ -207,6 +297,75 @@ static int axp20x_usb_power_set_voltage_min(struct axp20x_usb_power *power,
 					  AXP20X_VBUS_IPSOUT_MGMT,
 					  AXP20X_VBUS_VHOLD_MASK,
 					  val << AXP20X_VBUS_VHOLD_OFFSET);
+	default:
+		return -EINVAL;
+	}
+
+	return -EINVAL;
+}
+
+static int
+axp813_usb_power_set_input_current_limit(struct axp20x_usb_power *power,
+					 int intval)
+{
+	unsigned int reg;
+
+	switch (intval) {
+	case 100000:
+		reg = 0;
+		break;
+	case 500000:
+		reg = 1;
+		break;
+	case 900000:
+		reg = 2;
+		break;
+	case 1500000:
+		reg = 3;
+		break;
+	case 2000000:
+		reg = 4;
+		break;
+	case 2500000:
+		reg = 5;
+		break;
+	case 3000000:
+		reg = 6;
+		break;
+	case 3500000:
+		reg = 7;
+		break;
+	case 4000000:
+		reg = 8;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	return regmap_update_bits(power->regmap,
+				  AXP813_CHRG_CTRL3,
+				  AXP813_CHRG_CTRL3_VBUS_CUR_LIMIT_MASK,
+				  reg << AXP813_CHRG_CTRL3_VBUS_CUR_LIMIT_OFFSET);
+}
+
+static int axp813_usb_power_set_current_max(struct axp20x_usb_power *power,
+					    int intval)
+{
+	int val;
+
+	switch (intval) {
+	case 900000:
+		return regmap_update_bits(power->regmap,
+					  AXP20X_VBUS_IPSOUT_MGMT,
+					  AXP20X_VBUS_CLIMIT_MASK,
+					  AXP813_VBUC_CLIMIT_900mA);
+	case 1500000:
+	case 2000000:
+	case 2500000:
+		val = (intval - 1000000) / 500000;
+		return regmap_update_bits(power->regmap,
+					  AXP20X_VBUS_IPSOUT_MGMT,
+					  AXP20X_VBUS_CLIMIT_MASK, val);
 	default:
 		return -EINVAL;
 	}
@@ -248,8 +407,16 @@ static int axp20x_usb_power_set_property(struct power_supply *psy,
 		return axp20x_usb_power_set_voltage_min(power, val->intval);
 
 	case POWER_SUPPLY_PROP_CURRENT_MAX:
+		if (power->axp20x_id == AXP813_ID)
+			return axp813_usb_power_set_current_max(power,
+								val->intval);
 		return axp20x_usb_power_set_current_max(power, val->intval);
 
+	case POWER_SUPPLY_PROP_INPUT_CURRENT_LIMIT:
+		if (power->axp20x_id == AXP813_ID)
+			return axp813_usb_power_set_input_current_limit(power,
+								val->intval);
+		/* fallthrough */
 	default:
 		return -EINVAL;
 	}
@@ -261,7 +428,8 @@ static int axp20x_usb_power_prop_writeable(struct power_supply *psy,
 					   enum power_supply_property psp)
 {
 	return psp == POWER_SUPPLY_PROP_VOLTAGE_MIN ||
-	       psp == POWER_SUPPLY_PROP_CURRENT_MAX;
+	       psp == POWER_SUPPLY_PROP_CURRENT_MAX ||
+	       psp == POWER_SUPPLY_PROP_INPUT_CURRENT_LIMIT;
 }
 
 static enum power_supply_property axp20x_usb_power_properties[] = {
@@ -280,6 +448,7 @@ static enum power_supply_property axp22x_usb_power_properties[] = {
 	POWER_SUPPLY_PROP_ONLINE,
 	POWER_SUPPLY_PROP_VOLTAGE_MIN,
 	POWER_SUPPLY_PROP_CURRENT_MAX,
+	POWER_SUPPLY_PROP_INPUT_CURRENT_LIMIT,
 };
 
 static const struct power_supply_desc axp20x_usb_power_desc = {
@@ -382,7 +551,8 @@ static int axp20x_usb_power_probe(struct platform_device *pdev)
 		usb_power_desc = &axp20x_usb_power_desc;
 		irq_names = axp20x_irq_names;
 	} else if (power->axp20x_id == AXP221_ID ||
-		   power->axp20x_id == AXP223_ID) {
+		   power->axp20x_id == AXP223_ID ||
+		   power->axp20x_id == AXP813_ID) {
 		usb_power_desc = &axp22x_usb_power_desc;
 		irq_names = axp22x_irq_names;
 	} else {
@@ -428,6 +598,9 @@ static const struct of_device_id axp20x_usb_power_match[] = {
 	}, {
 		.compatible = "x-powers,axp223-usb-power-supply",
 		.data = (void *)AXP223_ID,
+	}, {
+		.compatible = "x-powers,axp813-usb-power-supply",
+		.data = (void *)AXP813_ID,
 	}, { /* sentinel */ }
 };
 MODULE_DEVICE_TABLE(of, axp20x_usb_power_match);
